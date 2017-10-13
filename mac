@@ -17,10 +17,10 @@ trap 'ret=$?; test $ret -ne 0 && printf "failed\n\n" >&2; exit $ret' EXIT
 set -e
 
 if [ ! -d "$HOME/.local/bin/" ]; then
-  mkdir "$HOME/.local/bin"
+  mkdir -p "$HOME/.local/bin"
 fi
 
-if [ ! -d "$HOME/.private/ssh/" ]; then
+if [ ! -d "$HOME/.private/" ]; then
   mkdir -p "$HOME/.private/ssh"
   touch "$HOME/.private/ssh/config_private"
   touch "$HOME/.private/zshenv"
@@ -89,6 +89,7 @@ brew bundle --file=- <<EOF
 tap "homebrew/services"
 tap "universal-ctags/universal-ctags"
 tap "caskroom/cask"
+tap "caskroom/fonts"
 
 # Unix
 brew "universal-ctags", args: ["HEAD"]
@@ -101,6 +102,7 @@ brew "zsh"
 brew "fzf"
 brew "tig"
 brew "wget"
+brew "python3"
 
 # Services
 brew "heroku"
@@ -125,12 +127,12 @@ brew "postgres", restart_service: :changed
 # Applications
 cask "1password"
 cask "alfred"
-cask "dash"
 cask "divvy"
 cask "dropbox"
 cask "firefox"
 cask "font-input"
 cask "font-source-code-pro"
+cask "google-chrome"
 cask "iterm2"
 cask "java"
 cask "keepingyouawake"
@@ -143,7 +145,6 @@ cask "quicklook-csv"
 cask "quicklook-json"
 cask "rowanj-gitx"
 cask "slack"
-cask "spark"
 cask "spotify"
 cask "transmission"
 cask "vimr"
@@ -160,12 +161,21 @@ if [ ! -d "$HOME/.oh-my-zsh" ]; then
   git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
 fi
 
-fancy_echo "Setting up configuration files..."
-if ! command -v dot >/dev/null; then
+fancy_echo "Setting up dotfiles..."
+DOT_COMMAND="$HOME/.cargo/bin/dot"
+if [ ! -f $DOT_COMMAND ]; then
   cargo install --git https://github.com/ubnt-intrepid/dot.git
+fi
+if [ ! -d "$HOME/.dotfiles" ]; then
+  $DOT_COMMAND clone jaischeema
   ln -s ~/.private ~/.dotfiles/private
-  dot clone jaischeema
-  dot link
+fi
+$DOT_COMMAND link
+
+if [ ! -f "$HOME/.local/share/nvim/site/autoload/plug.vim" ]; then
+  fancy_echo "Installing vim plugin manager..."
+  curl -fLo $HOME/.local/share/nvim/site/autoload/plug.vim --create-dirs \
+      https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 fi
 
 fancy_echo "Configuring asdf version manager..."
