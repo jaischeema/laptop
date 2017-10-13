@@ -11,40 +11,21 @@ fancy_echo() {
   printf "\n$fmt\n" "$@"
 }
 
-append_to_zshrc() {
-  local text="$1" zshrc
-  local skip_new_line="${2:-0}"
-
-  if [ -w "$HOME/.zshrc.local" ]; then
-    zshrc="$HOME/.zshrc.local"
-  else
-    zshrc="$HOME/.zshrc"
-  fi
-
-  if ! grep -Fqs "$text" "$zshrc"; then
-    if [ "$skip_new_line" -eq 1 ]; then
-      printf "%s\n" "$text" >> "$zshrc"
-    else
-      printf "\n%s\n" "$text" >> "$zshrc"
-    fi
-  fi
-}
-
 # shellcheck disable=SC2154
 trap 'ret=$?; test $ret -ne 0 && printf "failed\n\n" >&2; exit $ret' EXIT
 
 set -e
 
-if [ ! -d "$HOME/.bin/" ]; then
-  mkdir "$HOME/.bin"
+if [ ! -d "$HOME/.local/bin/" ]; then
+  mkdir "$HOME/.local/bin"
 fi
 
-if [ ! -f "$HOME/.zshrc" ]; then
-  touch "$HOME/.zshrc"
+if [ ! -d "$HOME/.private/ssh/" ]; then
+  mkdir -p "$HOME/.private/ssh"
+  touch "$HOME/.private/ssh/config_private"
+  touch "$HOME/.private/zshenv"
+  touch "$HOME/.private/gitconfig"
 fi
-
-# shellcheck disable=SC2016
-append_to_zshrc 'export PATH="$HOME/.bin:$PATH"'
 
 HOMEBREW_PREFIX="/usr/local"
 
@@ -94,11 +75,6 @@ if ! command -v brew >/dev/null; then
     curl -fsS \
       'https://raw.githubusercontent.com/Homebrew/install/master/install' | ruby
 
-    append_to_zshrc '# recommended by brew doctor'
-
-    # shellcheck disable=SC2016
-    append_to_zshrc 'export PATH="/usr/local/bin:$PATH"' 1
-
     export PATH="/usr/local/bin:$PATH"
 fi
 
@@ -110,7 +86,6 @@ fi
 fancy_echo "Updating Homebrew formulae ..."
 brew update --force # https://github.com/Homebrew/brew/issues/1151
 brew bundle --file=- <<EOF
-tap "thoughtbot/formulae"
 tap "homebrew/services"
 tap "universal-ctags/universal-ctags"
 tap "caskroom/cask"
@@ -119,52 +94,83 @@ tap "caskroom/cask"
 brew "universal-ctags", args: ["HEAD"]
 brew "git"
 brew "openssl"
-brew "rcm"
-brew "reattach-to-user-namespace"
 brew "the_silver_searcher"
-brew "tmux"
-brew "vim"
+brew "neovim"
 brew "watchman"
 brew "zsh"
+brew "fzf"
+brew "tig"
+brew "wget"
 
-# Heroku
+# Services
 brew "heroku"
-brew "parity"
-
-# GitHub
-brew "hub"
 
 # Image manipulation
 brew "imagemagick"
 
 # Testing
-brew "qt@5.5" if MacOS::Xcode.installed?
+brew "chromedriver"
 
 # Programming language prerequisites and package managers
 brew "libyaml" # should come after openssl
 brew "coreutils"
 brew "yarn"
 cask "gpgtools"
+brew "go"
+brew "rust"
 
 # Databases
 brew "postgres", restart_service: :changed
-brew "redis", restart_service: :changed
-EOF
 
-if brew list | grep --silent "qt@5.5"; then
-  fancy_echo "Symlink qmake binary to /usr/local/bin for Capybara Webkit..."
-  brew unlink qt@5.5
-  brew link --force qt@5.5
-fi
+# Applications
+cask "1password"
+cask "alfred"
+cask "dash"
+cask "divvy"
+cask "dropbox"
+cask "firefox"
+cask "font-input"
+cask "font-source-code-pro"
+cask "iterm2"
+cask "java"
+cask "keepingyouawake"
+cask "macdown"
+cask "nvalt"
+cask "qlcolorcode"
+cask "qlmarkdown"
+cask "qlstephen"
+cask "quicklook-csv"
+cask "quicklook-json"
+cask "rowanj-gitx"
+cask "slack"
+cask "spark"
+cask "spotify"
+cask "transmission"
+cask "vimr"
+cask "visual-studio-code"
+cask "vlc"
+EOF
 
 fancy_echo "Update heroku binary..."
 brew unlink heroku
 brew link --force heroku
 
+fancy_echo "Installing oh-my-zsh..."
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+fi
+
+fancy_echo "Setting up configuration files..."
+if ! command -v dot >/dev/null; then
+  cargo install --git https://github.com/ubnt-intrepid/dot.git
+  ln -s ~/.private ~/.dotfiles/private
+  dot clone jaischeema
+  dot link
+fi
+
 fancy_echo "Configuring asdf version manager..."
 if [ ! -d "$HOME/.asdf" ]; then
-  git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.3.0
-  append_to_zshrc "source $HOME/.asdf/asdf.sh" 1
+  git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.4.0
 fi
 
 install_asdf_plugin() {
@@ -192,8 +198,10 @@ install_asdf_language() {
   fi
 }
 
-fancy_echo "Installing latest Ruby..."
-install_asdf_language "ruby"
+RUBY_VERSION="2.4.2"
+fancy_echo "Installing ruby $RUBY_VERSION..."
+asdf install ruby $RUBY_VERSION
+asdf global ruby $RUBY_VERSION
 gem update --system
 gem_install_or_update "bundler"
 number_of_cores=$(sysctl -n hw.ncpu)
