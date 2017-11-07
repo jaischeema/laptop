@@ -92,17 +92,19 @@ tap "caskroom/cask"
 tap "caskroom/fonts"
 
 # Unix
-brew "universal-ctags", args: ["HEAD"]
-brew "git"
-brew "openssl"
-brew "the_silver_searcher"
-brew "neovim"
-brew "watchman"
-brew "zsh"
+brew "carthage"
 brew "fzf"
-brew "tig"
-brew "wget"
+brew "git"
+brew "httpie"
+brew "neovim"
+brew "openssl"
 brew "python3"
+brew "the_silver_searcher"
+brew "tig"
+brew "universal-ctags", args: ["HEAD"]
+brew "watchman"
+brew "wget"
+brew "zsh"
 
 # Services
 brew "heroku"
@@ -114,12 +116,14 @@ brew "imagemagick"
 brew "chromedriver"
 
 # Programming language prerequisites and package managers
-brew "libyaml" # should come after openssl
 brew "coreutils"
-brew "yarn"
-cask "gpgtools"
+brew "elm"
+brew "elm-format"
 brew "go"
+brew "libyaml" # should come after openssl
 brew "rust"
+brew "swiftlint"
+brew "yarn" cask "gpgtools"
 
 # Databases
 brew "postgres", restart_service: :changed
@@ -138,18 +142,25 @@ cask "java"
 cask "keepingyouawake"
 cask "macdown"
 cask "nvalt"
+cask "postico"
 cask "qlcolorcode"
 cask "qlmarkdown"
 cask "qlstephen"
 cask "quicklook-csv"
 cask "quicklook-json"
 cask "rowanj-gitx"
+cask "sequel-pro"
 cask "slack"
 cask "spotify"
+cask "sublime-text"
 cask "transmission"
+cask "vagrant"
 cask "vimr"
+cask "virtualbox"
+cask "viscosity"
 cask "visual-studio-code"
 cask "vlc"
+cask "whatsapp"
 EOF
 
 fancy_echo "Update heroku binary..."
