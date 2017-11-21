@@ -90,6 +90,7 @@ tap "homebrew/services"
 tap "universal-ctags/universal-ctags"
 tap "caskroom/cask"
 tap "caskroom/fonts"
+tap "uptech/homebrew-oss"
 
 # Unix
 brew "carthage"
@@ -123,7 +124,8 @@ brew "go"
 brew "libyaml" # should come after openssl
 brew "rust"
 brew "swiftlint"
-brew "yarn" cask "gpgtools"
+brew "yarn"
+brew "uptech/oss/alt"
 
 # Databases
 brew "postgres", restart_service: :changed
